@@ -65,6 +65,26 @@ export const createProduct = async (productData) => {
     }
 };
 
+export const updateProduct = async (id, productData) => {
+    try {
+        await api.put(`/products/${id}`, productData);
+        return true;
+    } catch (error) {
+        console.error("Erro ao atualizar:", error);
+        return false;
+    }
+};
+
+export const deleteProduct = async (id) => {
+    try {
+        await api.delete(`/products/${id}`);
+        return true;
+    } catch (error) {
+        console.error("Erro ao deletar:", error);
+        return false;
+    }
+};
+
 
 
 export default api;

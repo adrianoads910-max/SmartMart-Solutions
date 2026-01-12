@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Button, Select, Typography, Card, message, Row, Col } from 'antd';
 import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import MainLayout from '../../components/layout/MainLayout';
-import { getCategories, getNextProductId, createProduct } from '../../services/api';
+import MainLayout from '../../components/Navbar';
+import { getCategories, createProduct, getNextProductId } from '../../service/api';
 
 const { Title } = Typography;
 const { Option } = Select;

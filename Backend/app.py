@@ -226,6 +226,42 @@ def create_product():
         return jsonify({'message': 'Produto criado com sucesso!'}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+    # --- ATUALIZAR PRODUTO (PUT) ---
+@app.route('/products/<int:id>', methods=['PUT'])
+def update_product(id):
+    product = Product.query.get(id)
+    if not product:
+        return jsonify({'error': 'Produto não encontrado'}), 404
+    
+    data = request.json
+    try:
+        product.name = data['name']
+        product.price = data['price']
+        product.brand = data['brand']
+        product.category_id = data['category_id']
+        product.description = data.get('description', '')
+        
+        db.session.commit()
+        return jsonify({'message': 'Produto atualizado!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- EXCLUIR PRODUTO (DELETE) ---
+@app.route('/products/<int:id>', methods=['DELETE'])
+def delete_product(id):
+    product = Product.query.get(id)
+    if not product:
+        return jsonify({'error': 'Produto não encontrado'}), 404
+        
+    try:
+        # Nota: Se houver vendas ligadas a este produto, o SQLite pode reclamar (IntegrityError).
+        # O ideal seria deletar as vendas antes ou usar Cascade, mas para o teste simples:
+        db.session.delete(product)
+        db.session.commit()
+        return jsonify({'message': 'Produto excluído!'})
+    except Exception as e:
+        return jsonify({'error': 'Não é possível excluir produto com vendas associadas.'}), 400
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
