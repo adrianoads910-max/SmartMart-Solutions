@@ -5,12 +5,12 @@ import {
 } from 'antd';
 import { 
   SearchOutlined, CalendarOutlined, FileTextOutlined, InfoCircleOutlined,
-  EditOutlined, DeleteOutlined, SaveOutlined
+  EditOutlined, DeleteOutlined, SaveOutlined, BarcodeOutlined, PlusOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs'; 
 import MainLayout from '../../components/Navbar';
 import { getSalesHistory, updateSale, deleteSale } from '../../service/api';
-
+import AddSaleDrawer from '../../components/AddSaleDrawer';
 
 const { Title } = Typography;
 
@@ -22,6 +22,7 @@ const SalesHistory = () => {
 
   // Estados do Drawer (Edição)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
   const [editingSale, setEditingSale] = useState(null);
   const [form] = Form.useForm();
 
@@ -100,31 +101,67 @@ const SalesHistory = () => {
     }
   };
 
-  // --- TABELA ---
+  // --- RENDERIZAÇÃO DA LINHA EXPANDIDA (DETALHES) ---
   const expandedRowRender = (record) => {
+    // Calcula o preço unitário (proteção contra divisão por zero)
     const unitPrice = record.quantity > 0 ? record.total_price / record.quantity : 0;
+
     return (
-      <div className="bg-gray-50 p-4 rounded-md border border-gray-100 mx-4">
-        <Row gutter={[24, 16]}>
-            <Col xs={24} md={16}>
-                <Space direction="vertical" size="small">
-                    <Space className="text-teal-700 font-semibold">
+      <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 mx-4 shadow-inner">
+        <Row gutter={[32, 16]}>
+            
+            {/* ESQUERDA: Descrição do Produto */}
+            <Col xs={24} md={14}>
+                <Space direction="vertical" size="small" className="w-full">
+                    <Space className="text-teal-700 font-bold text-base">
                         <FileTextOutlined />
-                        <span>Detalhes do Produto:</span>
+                        <span>Sobre o Produto:</span>
                     </Space>
-                    <p className="text-gray-600 pl-6 m-0">
-                        {record.product_description || <span className="italic text-gray-400">Sem descrição.</span>}
-                    </p>
+                    <div className="bg-white p-4 rounded border border-gray-100 text-gray-600 leading-relaxed">
+                        {record.product_description 
+                            ? record.product_description 
+                            : <span className="italic text-gray-400">Nenhuma descrição detalhada disponível para este item no catálogo.</span>
+                        }
+                    </div>
                 </Space>
             </Col>
-            <Col xs={24} md={8} className="border-l border-gray-200 pl-6">
-                <Space direction="vertical" size="small">
-                    <Space className="text-blue-600 font-semibold">
-                        <InfoCircleOutlined />
-                        <span>Resumo Financeiro:</span>
+
+            {/* DIREITA: Card de Detalhes da Venda (Estilo Recibo) */}
+            <Col xs={24} md={10}>
+                <Space direction="vertical" size="small" className="w-full">
+                    <Space className="text-blue-600 font-bold text-base">
+                        <BarcodeOutlined />
+                        <span>Detalhes da Transação:</span>
                     </Space>
-                    <div className="pl-6 text-sm text-gray-600">
-                        <p className="mb-1">Preço Unitário: <span className="font-bold">R$ {unitPrice.toFixed(2)}</span></p>
+                    
+                    <div className="bg-white p-4 rounded border border-gray-200 shadow-sm">
+                        {/* Linha 1: ID */}
+                        <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-50">
+                            <span className="text-gray-500 text-sm">ID da Venda</span>
+                            <Tag color="blue" className="m-0 font-mono">#{record.id}</Tag>
+                        </div>
+
+                        {/* Linha 2: Cálculo Unitário */}
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-gray-500">Preço Unitário</span>
+                            <span className="text-gray-700 font-medium">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(unitPrice)}
+                            </span>
+                        </div>
+
+                        {/* Linha 3: Quantidade */}
+                        <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-100">
+                            <span className="text-gray-500">Quantidade</span>
+                            <span className="text-gray-700">x {record.quantity}</span>
+                        </div>
+
+                        {/* Linha 4: Total Final (Destaque) */}
+                        <div className="flex justify-between items-center pt-1">
+                            <span className="text-gray-800 font-bold">Total Pago</span>
+                            <span className="text-teal-600 font-bold text-lg">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(record.total_price)}
+                            </span>
+                        </div>
                     </div>
                 </Space>
             </Col>
@@ -168,9 +205,19 @@ const SalesHistory = () => {
 
   return (
     <MainLayout>
-      <div className="mb-6">
-        <Title level={2} className="!mb-0">Histórico de Vendas</Title>
-        <p className="text-gray-500">Edite ou exclua lançamentos de vendas.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <Title level={2} className="!mb-0">Histórico de Vendas</Title>
+            <p className="text-gray-500">Consulte e gerencie todas as transações.</p>
+        </div>
+        <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            className="bg-teal-600" 
+            onClick={() => setIsAddDrawerOpen(true)}
+        >
+            Nova Venda
+        </Button>
       </div>
 
       <Card className="shadow-sm border-gray-100 rounded-lg">
@@ -236,6 +283,12 @@ const SalesHistory = () => {
             </div>
         </Form>
       </Drawer>
+      {/* Drawer de Adição (Separado) */}
+      <AddSaleDrawer 
+        open={isAddDrawerOpen} 
+        onClose={() => setIsAddDrawerOpen(false)}
+        onSuccess={() => fetchSales()} // Recarrega a tabela após salvar
+      />
     </MainLayout>
   );
 };

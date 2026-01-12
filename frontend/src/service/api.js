@@ -117,5 +117,27 @@ export const deleteSale = async (id) => {
     }
 };
 
+// ...
+
+export const getNextSaleId = async () => {
+    try {
+        const response = await api.get('/sales/next-id');
+        return response.data.next_id;
+    } catch (error) {
+        console.error("Erro ID venda:", error);
+        return '';
+    }
+};
+
+export const createSale = async (saleData) => {
+    try {
+        const response = await api.post('/sales', saleData);
+        return true;
+    } catch (error) {
+        console.error("Erro criar venda:", error);
+        return false;
+    }
+};
+
 
 export default api;

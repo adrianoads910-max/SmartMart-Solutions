@@ -324,6 +324,34 @@ def delete_sale(id):
         return jsonify({'message': 'Venda excluída!'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+# --- PRÓXIMO ID DE VENDA ---
+@app.route('/sales/next-id', methods=['GET'])
+def get_next_sale_id():
+    last_sale = Sale.query.order_by(Sale.id.desc()).first()
+    next_id = 1
+    if last_sale:
+        next_id = last_sale.id + 1
+    return jsonify({'next_id': next_id})
+
+# --- CRIAR NOVA VENDA (POST) ---
+@app.route('/sales', methods=['POST'])
+def create_sale():
+    data = request.json
+    try:
+        new_sale = Sale(
+            id=data['id'],
+            product_id=data['product_id'],
+            quantity=data['quantity'],
+            total_price=data['total_price'],
+            # Converte string 'YYYY-MM-DD' para objeto date
+            date=datetime.strptime(data['date'], '%Y-%m-%d').date()
+        )
+        db.session.add(new_sale)
+        db.session.commit()
+        return jsonify({'message': 'Venda registrada com sucesso!'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
