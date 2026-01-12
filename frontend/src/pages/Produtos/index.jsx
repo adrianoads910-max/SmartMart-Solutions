@@ -208,12 +208,6 @@ const Products = () => {
             <Title level={2} className="!mb-0">Produtos</Title>
             <p className="text-gray-500">Gerencie o catálogo da sua loja.</p>
         </div>
-        <Space>
-            <Button icon={<UploadOutlined />}>Importar CSV</Button>
-            <Button type="primary" icon={<PlusOutlined />} className="bg-teal-600" onClick={handleAddNew}>
-                Novo Produto
-            </Button>
-        </Space>
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100">
