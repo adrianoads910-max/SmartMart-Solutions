@@ -7,6 +7,7 @@ import io # Para ler o arquivo da memória sem salvar no disco
 from database import db, init_db
 from models import Category, Product, Sale
 from seeds import run_seeds
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app) # Permite conexão com o Frontend
@@ -287,6 +288,42 @@ def get_sales_history():
         })
 
     return jsonify(sales_list)
+
+# --- ATUALIZAR VENDA (PUT) ---
+@app.route('/sales/<int:id>', methods=['PUT'])
+def update_sale(id):
+    sale = Sale.query.get(id)
+    if not sale:
+        return jsonify({'error': 'Venda não encontrada'}), 404
+    
+    data = request.json
+    try:
+        # Atualiza os campos editáveis
+        sale.quantity = data['quantity']
+        sale.total_price = data['total_price']
+        
+        # Converte a string de data (YYYY-MM-DD) para objeto Python Date
+        if 'date' in data:
+            sale.date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+            
+        db.session.commit()
+        return jsonify({'message': 'Venda atualizada com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- EXCLUIR VENDA (DELETE) ---
+@app.route('/sales/<int:id>', methods=['DELETE'])
+def delete_sale(id):
+    sale = Sale.query.get(id)
+    if not sale:
+        return jsonify({'error': 'Venda não encontrada'}), 404
+        
+    try:
+        db.session.delete(sale)
+        db.session.commit()
+        return jsonify({'message': 'Venda excluída!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

@@ -97,5 +97,25 @@ export const getSalesHistory = async () => {
     }
 };
 
+export const updateSale = async (id, saleData) => {
+    try {
+        await api.put(`/sales/${id}`, saleData);
+        return true;
+    } catch (error) {
+        console.error("Erro ao atualizar venda:", error);
+        return false;
+    }
+};
+
+export const deleteSale = async (id) => {
+    try {
+        await api.delete(`/sales/${id}`);
+        return true;
+    } catch (error) {
+        console.error("Erro ao deletar venda:", error);
+        return false;
+    }
+};
+
 
 export default api;
