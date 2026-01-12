@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Avatar, theme } from 'antd';
 import { DashboardOutlined, ShoppingOutlined, UserOutlined, ShopOutlined } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom'; // Importante para navegação
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const { Header, Sider, Content } = Layout;
 
@@ -11,13 +11,18 @@ const MainLayout = ({ children }) => {
     token: { colorBgContainer },
   } = theme.useToken();
   
-  // Hooks para navegação
   const navigate = useNavigate();
   const location = useLocation();
 
   return (
-    <Layout className="min-h-screen">
-      <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)} theme="light">
+    <Layout className="min-h-screen w-full">
+      <Sider 
+        collapsible 
+        collapsed={collapsed} 
+        onCollapse={(value) => setCollapsed(value)} 
+        theme="light"
+        className="shadow-md z-10"
+      >
         <div className="h-16 flex items-center justify-center border-b">
             <div className="flex items-center gap-2 font-bold text-xl text-teal-700">
                 <ShopOutlined className="text-2xl" />
@@ -26,13 +31,12 @@ const MainLayout = ({ children }) => {
         </div>
         <Menu
           theme="light"
-          // O Ant Design detecta se deve abrir o submenu baseado na rota
-          defaultOpenKeys={['sub-products']} 
-          selectedKeys={[location.pathname]} // Marca o item ativo baseado na URL
+          defaultOpenKeys={['sub-products']}
+          selectedKeys={[location.pathname]}
           mode="inline"
           className="border-r-0"
           onClick={({ key }) => {
-            navigate(key); // Navega direto para a chave (que será a rota)
+            navigate(key);
           }}
           items={[
             { 
@@ -46,20 +50,32 @@ const MainLayout = ({ children }) => {
                 label: 'Produtos',
                 children: [
                     { key: '/products', label: 'Lista de Produtos' },
-                    { key: '/products/add', label: 'Adicionar Produto' }, // Nova Rota
+                    { key: '/products/add', label: 'Adicionar Produto' },
                 ]
             }
           ]}
         />
       </Sider>
-      <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }} className="flex justify-end items-center px-6 shadow-sm">
-             <div className="flex items-center gap-2">
-                <span className="text-gray-600">Admin User</span>
-                <Avatar icon={<UserOutlined />} />
+      
+      {/* --- CORREÇÃO BLINDADA AQUI --- */}
+      {/* Adicionei 'minHeight: "100vh"' e 'display: "flex"', 'flexDirection: "column"' */}
+      <Layout style={{ backgroundColor: '#f0f2f5', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        
+        <Header 
+            style={{ background: colorBgContainer }} 
+            className="flex justify-end items-center px-8 shadow-sm"
+        >
+             <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                <div className="text-right leading-tight hidden md:block">
+                    <div className="text-sm font-semibold text-gray-700">Admin User</div>
+                    <div className="text-xs text-gray-500">Gerente</div>
+                </div>
+                <Avatar size="large" icon={<UserOutlined />} className="bg-teal-600" />
              </div>
         </Header>
-        <Content className="m-6" style={{ minHeight: 280 }}>
+        
+        {/* flex: 1 faz o conteúdo empurrar o fundo até o final se necessário */}
+        <Content className="m-6" style={{ flex: 1 }}>
           {children}
         </Content>
       </Layout>

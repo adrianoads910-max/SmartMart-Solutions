@@ -262,6 +262,8 @@ def delete_product(id):
         return jsonify({'message': 'Produto excluído!'})
     except Exception as e:
         return jsonify({'error': 'Não é possível excluir produto com vendas associadas.'}), 400
+    
+    
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
