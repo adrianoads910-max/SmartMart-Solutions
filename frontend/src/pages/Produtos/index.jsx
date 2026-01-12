@@ -5,29 +5,29 @@ import {
 } from 'antd';
 import { 
   PlusOutlined, UploadOutlined, SearchOutlined, EditOutlined, 
-  DeleteOutlined, SaveOutlined 
+  DeleteOutlined, SaveOutlined, FileTextOutlined 
 } from '@ant-design/icons';
 
 import MainLayout from '../../components/Navbar';
 import { 
-  getProducts, getCategories, deleteProduct, 
-  updateProduct, createProduct, getNextProductId 
+  getProducts, getCategories, getNextProductId, 
+  createProduct, updateProduct, deleteProduct 
 } from '../../service/api';
 
-const { Title } = Typography;
+const { Title, Text } = Typography; // Adicionei Text
 const { Option } = Select;
 const { TextArea } = Input;
 
 const Products = () => {
   // --- ESTADOS ---
-  const [allProducts, setAllProducts] = useState([]); // Guarda TUDO que veio do banco
-  const [filteredProducts, setFilteredProducts] = useState([]); // Guarda o que é EXIBIDO na tela
+  const [allProducts, setAllProducts] = useState([]); 
+  const [filteredProducts, setFilteredProducts] = useState([]); 
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Estados de Filtro
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(''); // <--- NOVO: Estado da busca
+  const [searchTerm, setSearchTerm] = useState(''); 
 
   // Estados do Drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -42,10 +42,9 @@ const Products = () => {
 
   const fetchProducts = async (catId = null) => {
     setLoading(true);
-    const data = await getProducts(catId); // Backend já filtra por categoria se mandar catId
+    const data = await getProducts(catId); 
     if (data) {
       setAllProducts(data);
-      // Aplica o filtro de texto localmente logo após carregar
       filterLocalData(data, searchTerm);
     }
     setLoading(false);
@@ -56,7 +55,7 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  // --- LÓGICA DE FILTRO LOCAL (Busca por texto) ---
+  // --- LÓGICA DE FILTRO LOCAL ---
   const filterLocalData = (data, search) => {
     if (!search) {
       setFilteredProducts(data);
@@ -72,22 +71,17 @@ const Products = () => {
   };
 
   // --- HANDLERS ---
-  
-  // 1. Mudança de Categoria (Vai no backend)
   const handleCategoryChange = (value) => {
     setSelectedCategory(value);
-    fetchProducts(value); // Recarrega do backend filtrado por categoria
-    // Nota: O searchTerm é reaplicado dentro do fetchProducts -> filterLocalData
+    fetchProducts(value); 
   };
 
-  // 2. Mudança no Input de Busca (Filtra localmente)
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
     filterLocalData(allProducts, value);
   };
 
-  // 3. Abrir Drawer para CRIAR
   const handleAddNew = async () => {
     setEditingProduct(null);
     form.resetFields();
@@ -98,14 +92,13 @@ const Products = () => {
     setIsDrawerOpen(true);
   };
 
-  // 4. Abrir Drawer para EDITAR
   const handleEdit = (record) => {
+    // Impede a propagação para não abrir/fechar o expandir ao clicar no botão
     setEditingProduct(record);
     form.setFieldsValue({ ...record, category_id: record.category_id });
     setIsDrawerOpen(true);
   };
 
-  // 5. EXCLUIR
   const handleDelete = async (id) => {
     const success = await deleteProduct(id);
     if (success) {
@@ -116,7 +109,6 @@ const Products = () => {
     }
   };
 
-  // 6. SALVAR
   const onFinish = async (values) => {
     let success = false;
     if (editingProduct) {
@@ -136,6 +128,23 @@ const Products = () => {
       setIsDrawerOpen(false);
       fetchProducts(selectedCategory);
     }
+  };
+
+  // --- CONFIGURAÇÃO DA LINHA EXPANSÍVEL (DESCRIÇÃO) ---
+  const expandedRowRender = (record) => {
+    return (
+      <div className="bg-gray-50 p-4 rounded-md border border-gray-100 mx-4">
+        <Space direction="vertical" size="small">
+            <Space className="text-teal-700 font-semibold">
+                <FileTextOutlined />
+                <span>Descrição Detalhada:</span>
+            </Space>
+            <p className="text-gray-600 pl-6 m-0">
+                {record.description ? record.description : <span className="italic text-gray-400">Sem descrição cadastrada para este produto.</span>}
+            </p>
+        </Space>
+      </div>
+    );
   };
 
   // --- COLUNAS ---
@@ -179,7 +188,8 @@ const Products = () => {
       key: 'action',
       width: 120, 
       render: (_, record) => (
-        <Space size="small">
+        <Space size="small" onClick={(e) => e.stopPropagation()}> 
+        {/* e.stopPropagation impede que clicar no botão abra a descrição */}
           <Tooltip title="Editar">
             <Button 
               type="text" icon={<EditOutlined />} 
@@ -227,7 +237,6 @@ const Products = () => {
                 </Select>
             </Col>
             <Col xs={24} md={16} className="text-right mt-2 md:mt-0">
-                 {/* --- INPUT DE BUSCA FUNCIONAL --- */}
                  <Input 
                     prefix={<SearchOutlined className="text-gray-400" />} 
                     placeholder="Buscar por nome, marca ou ID..." 
@@ -242,11 +251,18 @@ const Products = () => {
 
       <Table 
         columns={columns} 
-        dataSource={filteredProducts} // <--- Agora usamos a lista filtrada
+        dataSource={filteredProducts} 
         rowKey="id" 
         loading={loading}
         pagination={{ pageSize: 8 }} 
         className="shadow-sm bg-white rounded-lg"
+        
+        // --- AQUI ESTÁ A MÁGICA DA EXPANSÃO ---
+        expandable={{
+            expandedRowRender: expandedRowRender,
+            expandRowByClick: true, // Permite clicar na linha inteira
+            rowExpandable: (record) => true,
+        }}
       />
 
       <Drawer
