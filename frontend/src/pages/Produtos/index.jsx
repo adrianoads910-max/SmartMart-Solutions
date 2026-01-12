@@ -10,8 +10,8 @@ import {
 
 import MainLayout from '../../components/Navbar';
 import { 
-  getProducts, getCategories, getNextProductId, 
-  createProduct, updateProduct, deleteProduct 
+  getProducts, getCategories, deleteProduct, 
+  updateProduct, createProduct, getNextProductId 
 } from '../../service/api';
 
 const { Title } = Typography;
@@ -20,15 +20,19 @@ const { TextArea } = Input;
 
 const Products = () => {
   // --- ESTADOS ---
-  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // Guarda TUDO que veio do banco
+  const [filteredProducts, setFilteredProducts] = useState([]); // Guarda o que é EXIBIDO na tela
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Estados de Filtro
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(''); // <--- NOVO: Estado da busca
 
-  // Estados do Drawer (Formulário Lateral)
+  // Estados do Drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null); // Se null = Criando, se objeto = Editando
-  const [form] = Form.useForm(); // Instância do formulário
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [form] = Form.useForm();
 
   // --- CARREGAMENTO INICIAL ---
   const fetchCategories = async () => {
@@ -38,8 +42,12 @@ const Products = () => {
 
   const fetchProducts = async (catId = null) => {
     setLoading(true);
-    const data = await getProducts(catId);
-    if (data) setProducts(data);
+    const data = await getProducts(catId); // Backend já filtra por categoria se mandar catId
+    if (data) {
+      setAllProducts(data);
+      // Aplica o filtro de texto localmente logo após carregar
+      filterLocalData(data, searchTerm);
+    }
     setLoading(false);
   };
 
@@ -48,80 +56,89 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  // --- AÇÕES DO USUÁRIO ---
-  
-  const handleCategoryChange = (value) => {
-    setSelectedCategory(value);
-    fetchProducts(value);
+  // --- LÓGICA DE FILTRO LOCAL (Busca por texto) ---
+  const filterLocalData = (data, search) => {
+    if (!search) {
+      setFilteredProducts(data);
+      return;
+    }
+    const lowerSearch = search.toLowerCase();
+    const filtered = data.filter(product => 
+      product.name.toLowerCase().includes(lowerSearch) || 
+      product.brand.toLowerCase().includes(lowerSearch) ||
+      String(product.id).includes(lowerSearch)
+    );
+    setFilteredProducts(filtered);
   };
 
-  // 1. Abrir Drawer para CRIAR NOVO
+  // --- HANDLERS ---
+  
+  // 1. Mudança de Categoria (Vai no backend)
+  const handleCategoryChange = (value) => {
+    setSelectedCategory(value);
+    fetchProducts(value); // Recarrega do backend filtrado por categoria
+    // Nota: O searchTerm é reaplicado dentro do fetchProducts -> filterLocalData
+  };
+
+  // 2. Mudança no Input de Busca (Filtra localmente)
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    filterLocalData(allProducts, value);
+  };
+
+  // 3. Abrir Drawer para CRIAR
   const handleAddNew = async () => {
-    setEditingProduct(null); // Modo Criação
+    setEditingProduct(null);
     form.resetFields();
-    
-    // Busca o próximo ID automático no backend
     try {
         const nextId = await getNextProductId();
         form.setFieldsValue({ id: nextId });
-    } catch (e) {
-        console.error("Erro ao gerar ID", e);
-    }
-    
+    } catch (e) { console.error(e); }
     setIsDrawerOpen(true);
   };
 
-  // 2. Abrir Drawer para EDITAR
+  // 4. Abrir Drawer para EDITAR
   const handleEdit = (record) => {
-    setEditingProduct(record); // Modo Edição
-    
-    // Preenche o formulário com os dados da linha clicada
-    form.setFieldsValue({
-      ...record,
-      category_id: record.category_id 
-    });
-    
+    setEditingProduct(record);
+    form.setFieldsValue({ ...record, category_id: record.category_id });
     setIsDrawerOpen(true);
   };
 
-  // 3. EXCLUIR Produto
+  // 5. EXCLUIR
   const handleDelete = async (id) => {
     const success = await deleteProduct(id);
     if (success) {
-      message.success('Produto excluído com sucesso');
-      fetchProducts(selectedCategory); // Recarrega a tabela
+      message.success('Produto excluído');
+      fetchProducts(selectedCategory);
     } else {
-      message.error('Erro ao excluir. O produto pode ter vendas associadas.');
+      message.error('Erro ao excluir.');
     }
   };
 
-  // 4. SALVAR (Submit do Formulário)
+  // 6. SALVAR
   const onFinish = async (values) => {
     let success = false;
-
     if (editingProduct) {
-      // Atualizando (PUT)
       success = await updateProduct(editingProduct.id, values);
-      if (success) message.success('Produto atualizado!');
+      if (success) message.success('Atualizado!');
     } else {
-      // Criando Novo (POST)
       try {
         await createProduct(values);
         success = true;
-        message.success('Produto criado!');
+        message.success('Criado!');
       } catch (error) {
         success = false;
-        message.error('Erro ao criar. Verifique se o ID já existe.');
+        message.error('Erro ao criar.');
       }
     }
-
     if (success) {
       setIsDrawerOpen(false);
-      fetchProducts(selectedCategory); // Atualiza tabela
+      fetchProducts(selectedCategory);
     }
   };
 
-  // --- COLUNAS DA TABELA ---
+  // --- COLUNAS ---
   const columns = [
     {
       title: 'ID',
@@ -165,28 +182,18 @@ const Products = () => {
         <Space size="small">
           <Tooltip title="Editar">
             <Button 
-              type="text" 
-              icon={<EditOutlined />} 
+              type="text" icon={<EditOutlined />} 
               className="text-blue-600 hover:bg-blue-50"
               onClick={() => handleEdit(record)} 
             />
           </Tooltip>
-
-          {/* Botão com confirmação de segurança */}
           <Popconfirm
             title="Excluir produto"
-            description="Tem certeza? Essa ação não pode ser desfeita."
             onConfirm={() => handleDelete(record.id)}
-            okText="Sim"
-            cancelText="Não"
+            okText="Sim" cancelText="Não"
           >
             <Tooltip title="Excluir">
-                <Button 
-                type="text" 
-                danger 
-                icon={<DeleteOutlined />}
-                className="hover:bg-red-50"
-                />
+                <Button type="text" danger icon={<DeleteOutlined />} className="hover:bg-red-50" />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -201,6 +208,12 @@ const Products = () => {
             <Title level={2} className="!mb-0">Produtos</Title>
             <p className="text-gray-500">Gerencie o catálogo da sua loja.</p>
         </div>
+        <Space>
+            <Button icon={<UploadOutlined />}>Importar CSV</Button>
+            <Button type="primary" icon={<PlusOutlined />} className="bg-teal-600" onClick={handleAddNew}>
+                Novo Produto
+            </Button>
+        </Space>
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100">
@@ -220,27 +233,33 @@ const Products = () => {
                 </Select>
             </Col>
             <Col xs={24} md={16} className="text-right mt-2 md:mt-0">
-                 <Input prefix={<SearchOutlined />} placeholder="Buscar produto..." style={{ width: 250 }} />
+                 {/* --- INPUT DE BUSCA FUNCIONAL --- */}
+                 <Input 
+                    prefix={<SearchOutlined className="text-gray-400" />} 
+                    placeholder="Buscar por nome, marca ou ID..." 
+                    style={{ width: 300 }} 
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    allowClear
+                 />
             </Col>
         </Row>
       </div>
 
       <Table 
         columns={columns} 
-        dataSource={products} 
+        dataSource={filteredProducts} // <--- Agora usamos a lista filtrada
         rowKey="id" 
         loading={loading}
         pagination={{ pageSize: 8 }} 
         className="shadow-sm bg-white rounded-lg"
       />
 
-      {/* --- DRAWER (FORMULÁRIO LATERAL) --- */}
       <Drawer
         title={editingProduct ? "Editar Produto" : "Novo Produto"}
         width={500}
         onClose={() => setIsDrawerOpen(false)}
         open={isDrawerOpen}
-        // Estilo para garantir que o botão fique fixo embaixo
         bodyStyle={{ paddingBottom: 80 }}
       >
         <Form
@@ -251,21 +270,12 @@ const Products = () => {
         >
             <Row gutter={16}>
                 <Col span={12}>
-                    <Form.Item
-                        name="id"
-                        label="ID"
-                        rules={[{ required: true }]}
-                    >
-                        {/* ID desabilitado na edição para não quebrar integridade do banco */}
+                    <Form.Item name="id" label="ID" rules={[{ required: true }]}>
                         <InputNumber style={{ width: '100%' }} disabled={!!editingProduct} className="font-bold" />
                     </Form.Item>
                 </Col>
                 <Col span={12}>
-                    <Form.Item
-                        name="category_id"
-                        label="Categoria"
-                        rules={[{ required: true, message: 'Selecione' }]}
-                    >
+                    <Form.Item name="category_id" label="Categoria" rules={[{ required: true, message: 'Selecione' }]}>
                         <Select placeholder="Selecione">
                             {categories.map(cat => (
                                 <Option key={cat.id} value={cat.id}>{cat.name}</Option>
@@ -275,49 +285,32 @@ const Products = () => {
                 </Col>
             </Row>
 
-            <Form.Item
-                name="name"
-                label="Nome do Produto"
-                rules={[{ required: true, message: 'Insira o nome' }]}
-            >
+            <Form.Item name="name" label="Nome do Produto" rules={[{ required: true }]}>
                 <Input placeholder="Ex: Smart TV" />
             </Form.Item>
 
             <Row gutter={16}>
                 <Col span={12}>
-                    <Form.Item
-                        name="brand"
-                        label="Marca"
-                        rules={[{ required: true }]}
-                    >
+                    <Form.Item name="brand" label="Marca" rules={[{ required: true }]}>
                         <Input placeholder="Ex: Sony" />
                     </Form.Item>
                 </Col>
                 <Col span={12}>
-                    <Form.Item
-                        name="price"
-                        label="Preço (R$)"
-                        rules={[{ required: true }]}
-                    >
+                    <Form.Item name="price" label="Preço (R$)" rules={[{ required: true }]}>
                         <InputNumber
                             style={{ width: '100%' }}
                             formatter={value => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                             parser={value => value.replace(/\R\$\s?|(,*)/g, '')}
-                            min={0}
-                            precision={2}
+                            min={0} precision={2}
                         />
                     </Form.Item>
                 </Col>
             </Row>
 
-            <Form.Item
-                name="description"
-                label="Descrição"
-            >
+            <Form.Item name="description" label="Descrição">
                 <TextArea rows={4} placeholder="Detalhes do produto..." />
             </Form.Item>
 
-            {/* Botões de Ação Fixos no Rodapé do Drawer */}
             <div className="absolute right-0 bottom-0 w-full border-t border-gray-100 p-4 bg-white text-right">
                 <Space>
                     <Button onClick={() => setIsDrawerOpen(false)}>Cancelar</Button>
