@@ -1,10 +1,3 @@
-Com certeza! Um **README.md** bem escrito é essencial, especialmente em desafios técnicos, pois ele guia o avaliador sobre como rodar o projeto e demonstra sua capacidade de documentação.
-
-Como o PDF pedia especificamente para incluir as respostas das "Questões Teóricas" no README, eu já as incluí no final do arquivo com respostas técnicas de alto nível.
-
-Aqui está o arquivo pronto para você copiar e colar na raiz do seu projeto:
-
-```markdown
 # 🛒 SmartMart Solutions - Dashboard & Gestão de Produtos
 
 > Desafio Técnico Fullstack | Python (Flask) + React (Vite)
