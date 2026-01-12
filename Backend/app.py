@@ -263,7 +263,30 @@ def delete_product(id):
     except Exception as e:
         return jsonify({'error': 'Não é possível excluir produto com vendas associadas.'}), 400
     
-    
+# --- LISTAR HISTÓRICO DE VENDAS ---
+@app.route('/sales', methods=['GET'])
+def get_sales_history():
+    results = db.session.query(Sale, Product, Category)\
+        .join(Product, Sale.product_id == Product.id)\
+        .join(Category, Product.category_id == Category.id)\
+        .order_by(Sale.date.desc())\
+        .all()
+
+    sales_list = []
+    for sale, product, category in results:
+        sales_list.append({
+            "id": sale.id,
+            "date": sale.date.strftime('%Y-%m-%d'),
+            "quantity": sale.quantity,
+            "total_price": sale.total_price,
+            "product_name": product.name,
+            "category_name": category.name,
+            
+            # --- ADICIONE ESTA LINHA ---
+            "product_description": product.description 
+        })
+
+    return jsonify(sales_list)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

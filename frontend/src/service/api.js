@@ -85,6 +85,17 @@ export const deleteProduct = async (id) => {
     }
 };
 
+// ... outros exports
+
+export const getSalesHistory = async () => {
+    try {
+        const response = await api.get('/sales');
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao buscar histórico de vendas:", error);
+        return [];
+    }
+};
 
 
 export default api;

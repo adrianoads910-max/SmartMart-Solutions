@@ -39,11 +39,17 @@ const MainLayout = ({ children }) => {
             navigate(key);
           }}
           items={[
+            // --- NOVO SUBMENU DASHBOARD ---
             { 
-                key: '/', 
+                key: 'sub-dashboard', 
                 icon: <DashboardOutlined />, 
-                label: 'Dashboard' 
+                label: 'Dashboard',
+                children: [
+                    { key: '/', label: 'Visão Geral' },
+                    { key: '/sales-history', label: 'Histórico de Vendas' }, // Nova tela
+                ]
             },
+            // --- SUBMENU PRODUTOS (Mantém igual) ---
             {
                 key: 'sub-products',
                 icon: <ShoppingOutlined />,
