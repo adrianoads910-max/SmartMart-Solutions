@@ -6,7 +6,7 @@ import { getNextSaleId, getProducts, createSale } from '../../service/api';
 
 const { Option } = Select;
 
-const AddSaleDrawer = ({ open, onClose, onSuccess }) => {
+export const AddSaleDrawer = ({ open, onClose, onSuccess }) => {
   const [form] = Form.useForm();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -98,7 +98,7 @@ const AddSaleDrawer = ({ open, onClose, onSuccess }) => {
         form={form}
         layout="vertical"
         onFinish={onFinish}
-        onValuesChange={handleValuesChange} // <--- ONDE A MÁGICA ACONTECE
+        onValuesChange={handleValuesChange} 
       >
         <Row gutter={16}>
           <Col span={12}>
@@ -164,10 +164,10 @@ const AddSaleDrawer = ({ open, onClose, onSuccess }) => {
         </div>
 
         <div className="absolute right-0 bottom-0 w-full border-t border-gray-100 p-4 bg-white text-right">
-            <Button onClick={onClose} style={{ marginRight: 8 }}>
+            <Button onClick={onClose} style={{ marginRight: 8 }} >
               Cancelar
             </Button>
-            <Button type="primary" htmlType="submit" loading={loading} className="bg-teal-600" icon={<SaveOutlined />}>
+            <Button type="primary" htmlType="submit" loading={loading} className="!bg-teal-600 hover:!bg-teal-700" icon={<SaveOutlined />}>
               Registrar Venda
             </Button>
         </div>

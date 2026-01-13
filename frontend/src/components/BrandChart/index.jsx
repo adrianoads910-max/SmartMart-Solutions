@@ -41,7 +41,7 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-const BrandChart = ({ data, loading }) => {
+export const BrandChart = ({ data, loading }) => {
   return (
     <Card 
       title={

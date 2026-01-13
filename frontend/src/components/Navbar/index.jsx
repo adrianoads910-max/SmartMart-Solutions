@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Avatar, theme } from 'antd';
+import { Layout, Menu, Avatar, theme, ConfigProvider } from 'antd'; // <--- Importe o ConfigProvider
 import { DashboardOutlined, ShoppingOutlined, UserOutlined, ShopOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const { Header, Sider, Content } = Layout;
 
-const MainLayout = ({ children }) => {
+// Cor exata do Tailwind teal-700 usado no título "SmartMart"
+const TEAL_TEXT = '#0f766e'; 
+// Cor exata do Tailwind teal-50 para o fundo
+const TEAL_BG_LIGHT = '#f0fdfa';
+
+export const MainLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer },
@@ -29,42 +34,61 @@ const MainLayout = ({ children }) => {
                 {!collapsed && <span>SmartMart</span>}
             </div>
         </div>
-        <Menu
-          theme="light"
-          defaultOpenKeys={['sub-products']}
-          selectedKeys={[location.pathname]}
-          mode="inline"
-          className="border-r-0"
-          onClick={({ key }) => {
-            navigate(key);
-          }}
-          items={[
-            // --- NOVO SUBMENU DASHBOARD ---
-            { 
-                key: 'sub-dashboard', 
-                icon: <DashboardOutlined />, 
-                label: 'Dashboard',
-                children: [
-                    { key: '/', label: 'Visão Geral' },
-                    { key: '/sales-history', label: 'Histórico de Vendas' }, // Nova tela
-                ]
-            },
-            // --- SUBMENU PRODUTOS (Mantém igual) ---
-            {
-                key: 'sub-products',
-                icon: <ShoppingOutlined />,
-                label: 'Produtos',
-                children: [
-                    { key: '/products', label: 'Lista de Produtos' },
-                    { key: '/products/add', label: 'Adicionar Produto' },
-                ]
-            }
-          ]}
-        />
+
+        {/* --- CUSTOMIZAÇÃO DO TEMA DO MENU --- */}
+        <ConfigProvider
+            theme={{
+                components: {
+                    Menu: {
+                        // Cor do texto do item selecionado (Verde Escuro)
+                        itemSelectedColor: TEAL_TEXT, 
+                        // Cor do fundo do item selecionado (Verde Claro)
+                        itemSelectedBg: TEAL_BG_LIGHT, 
+                        // Cor do texto ao passar o mouse
+                        itemHoverColor: TEAL_TEXT,
+                        // Cor da barra lateral de seleção (se houver)
+                        itemActiveBg: TEAL_BG_LIGHT,
+                    }
+                },
+                token: {
+                    // Define a cor primária global para este escopo (afeta submenus abertos)
+                    colorPrimary: TEAL_TEXT,
+                }
+            }}
+        >
+            <Menu
+                theme="light"
+                defaultOpenKeys={['sub-products', 'sub-dashboard']}
+                selectedKeys={[location.pathname]}
+                mode="inline"
+                className="border-r-0"
+                onClick={({ key }) => {
+                    navigate(key);
+                }}
+                items={[
+                    { 
+                        key: 'sub-dashboard', 
+                        icon: <DashboardOutlined />, 
+                        label: 'Dashboard',
+                        children: [
+                            { key: '/', label: 'Visão Geral' },
+                            { key: '/sales-history', label: 'Histórico de Vendas' },
+                        ]
+                    },
+                    {
+                        key: 'sub-products',
+                        icon: <ShoppingOutlined />,
+                        label: 'Produtos',
+                        children: [
+                            { key: '/products', label: 'Lista de Produtos' },
+                            { key: '/products/add', label: 'Adicionar Produto' },
+                        ]
+                    }
+                ]}
+            />
+        </ConfigProvider>
       </Sider>
       
-      {/* --- CORREÇÃO BLINDADA AQUI --- */}
-      {/* Adicionei 'minHeight: "100vh"' e 'display: "flex"', 'flexDirection: "column"' */}
       <Layout style={{ backgroundColor: '#f0f2f5', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         
         <Header 
@@ -76,11 +100,10 @@ const MainLayout = ({ children }) => {
                     <div className="text-sm font-semibold text-gray-700">Admin User</div>
                     <div className="text-xs text-gray-500">Gerente</div>
                 </div>
-                <Avatar size="large" icon={<UserOutlined />} className="bg-teal-600" />
+                <Avatar size="large" icon={<UserOutlined />} className="!bg-teal-600 hover:!bg-teal-700" />
              </div>
         </Header>
         
-        {/* flex: 1 faz o conteúdo empurrar o fundo até o final se necessário */}
         <Content className="m-6" style={{ flex: 1 }}>
           {children}
         </Content>

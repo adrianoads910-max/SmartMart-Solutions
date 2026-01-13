@@ -236,7 +236,7 @@ const SalesHistory = () => {
         <Button 
             type="primary" 
             icon={<PlusOutlined />} 
-            className="bg-teal-600" 
+            className="!bg-teal-600 hover:!bg-teal-700"
             onClick={() => setIsAddDrawerOpen(true)}
         >
             Nova Venda

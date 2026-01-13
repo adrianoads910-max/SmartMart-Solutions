@@ -5,16 +5,17 @@ const api = axios.create({
 });
 
 // --- DASHBOARD ---
-export const getDashboardData = async (startDate, endDate) => {
+export const getDashboardData = async (startDate, endDate, categoryId, brand) => {
   try {
-    let url = '/dashboard';
+    // Usamos URLSearchParams para facilitar a montagem da query string
+    const params = new URLSearchParams();
     
-    // Se tiver datas, adiciona na URL: /dashboard?start_date=...&end_date=...
-    if (startDate && endDate) {
-      url += `?start_date=${startDate}&end_date=${endDate}`;
-    }
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    if (categoryId) params.append('category_id', categoryId);
+    if (brand) params.append('brand', brand);
 
-    const response = await api.get(url);
+    const response = await api.get(`/dashboard?${params.toString()}`);
     return response.data;
   } catch (error) {
     console.error("Erro dashboard:", error);

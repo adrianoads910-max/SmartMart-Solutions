@@ -2,7 +2,7 @@
 
 > Desafio Técnico Fullstack | Python (Flask) + React (Vite)
 
-Este projeto é um protótipo funcional desenvolvido para a **SmartMart Solutions**, focado na visualização de dados de vendas (Dashboard) e no gerenciamento de catálogo de produtos (CRUD).
+Este projeto é um protótipo funcional desenvolvido para a **SmartMart Solutions**, focado na visualização de dados de vendas (Dashboard), no gerenciamento de catálogo de produtos (CRUD) e no controle de transações (Histórico de Vendas).
 
 O sistema foi construído com foco em **UX/UI moderna**, utilizando **Ant Design** para componentes visuais e **Recharts** para visualização de dados, com um backend leve em **Flask**.
 
@@ -18,15 +18,23 @@ O sistema foi construído com foco em **UX/UI moderna**, utilizando **Ant Design
   - **Market Share por Marca:** Gráfico de Rosca (Donut) mostrando a participação de cada marca no faturamento.
 - **Ranking de Produtos:** Tabela de "Top 5 Produtos" com medalhas (🥇, 🥈, 🥉) para os líderes e barra de progresso visual.
 
+### 📜 Histórico de Vendas (Novo)
+- **Listagem Completa:** Tabela detalhada de todas as transações realizadas.
+- **Busca Inteligente:** Filtro local por nome do produto, categoria ou data.
+- **Recibo Digital (Expandable):** Ao clicar na venda, abre-se um detalhe estilo "cupom" mostrando o cálculo (Preço Unitário × Quantidade = Total).
+- **PDV (Ponto de Venda):**
+  - **Nova Venda:** Formulário inteligente que preenche o preço unitário ao selecionar o produto e calcula o total automaticamente.
+  - **Edição:** Permite ajustar quantidade ou data, recalculando os valores em tempo real.
+- **Exportação:** Botão para baixar o relatório de vendas atual em **CSV** instantaneamente.
+
 ### 📦 Gestão de Produtos
-- **Listagem Avançada:** Tabela com paginação automática.
+- **Listagem Avançada:** Tabela com paginação automática e exportação para CSV.
 - **Filtros e Busca:** Filtragem por Categoria (Select) e Busca Textual (Nome, Marca ou ID) em tempo real.
-- **Detalhes Expansíveis:** Clique na linha para expandir e ver a descrição completa do produto.
 - **CRUD Completo via Drawer:**
-  - **Criação:** Formulário lateral deslizante (Drawer) que sugere automaticamente o próximo ID sequencial.
-  - **Edição:** Carrega os dados do produto no mesmo formulário lateral.
-  - **Exclusão:** Botão com confirmação de segurança (`Popconfirm`).
-- **Importação de CSV:** (Backend preparado) Rota `/products/upload` implementada para carga em lote.
+  - **Criação:** Formulário lateral que sugere o próximo ID sequencial.
+  - **Categorias:** Criação rápida de novas categorias sem sair da tela de cadastro.
+  - **Edição/Exclusão:** Atualização de dados e remoção com trava de segurança (`Popconfirm`).
+- **Importação em Lote:** Upload de arquivo CSV (rota `/products/upload`) processado via Pandas no backend.
 
 ---
 
@@ -37,14 +45,14 @@ O sistema foi construído com foco em **UX/UI moderna**, utilizando **Ant Design
 - **Framework:** Flask
 - **Banco de Dados:** SQLite (com SQLAlchemy ORM)
 - **Manipulação de Dados:** Pandas (para leitura de CSV e processamento)
-- **CORS:** Flask-CORS para integração com o frontend.
+- **CORS:** Flask-CORS para integração.
 
 ### Frontend (Interface)
 - **Framework:** React (Vite)
 - **Estilização:** Tailwind CSS + Ant Design (AntD)
 - **Gráficos:** Recharts
+- **Manipulação de Datas:** Day.js
 - **Http Client:** Axios
-- **Ícones:** Ant Design Icons
 
 ---
 
@@ -71,7 +79,7 @@ pip install flask flask-sqlalchemy flask-cors pandas
 
 ```
 
-Execute o servidor (o banco será criado e populado automaticamente via `seeds.py` na primeira execução):
+Execute o servidor (o banco será criado e populado automaticamente na primeira execução):
 
 ```bash
 python app.py
@@ -93,18 +101,21 @@ Instale as dependências:
 
 ```bash
 npm install
-npm i -g pnpm
+# Ou se preferir pnpm:
+# npm i -g pnpm
+# pnpm install
 
 ```
 
 Rode o projeto:
 
 ```bash
-pnpm run dev
+npm run dev
+# Ou: pnpm run dev
 
 ```
 
-*Acesse a aplicação em: `http://localhost:5173` (ou a porta indicada no terminal)*
+*Acesse a aplicação em: `http://localhost:5173*`
 
 ---
 
@@ -113,21 +124,22 @@ pnpm run dev
 ```text
 /
 ├── backend/
-│   ├── app.py           # Rotas e Entrypoint
+│   ├── app.py           # Rotas, Models e Lógica de Negócio
 │   ├── database.py      # Configuração do SQLite
-│   ├── models.py        # Modelos (Product, Sale, Category)
-│   ├── seeds.py         # Script de carga inicial dos CSVs
+│   ├── seeds.py         # Script de carga inicial
 │   └── *.csv            # Arquivos de dados iniciais
 │
 └── frontend/
     ├── src/
     │   ├── components/
-    │   │   ├── dashboard/  # Componentes isolados (Charts, KPI Cards)
-    │   │   └── layout/     # MainLayout (Sidebar + Header)
+    │   │   ├── dashboard/      # Gráficos, Cards e Drawers (AddSaleDrawer)
+    │   │   └── layout/         # MainLayout (Sidebar + Header)
     │   ├── pages/
-    │   │   ├── Dashboard.jsx
-    │   │   └── Products.jsx
-    │   └── services/       # Configuração do Axios (api.js)
+    │   │   ├── Dashboard.jsx   # Visão Geral (KPIs)
+    │   │   ├── SalesHistory.jsx# Histórico de Vendas (Tabela + PDV)
+    │   │   ├── Products.jsx    # Lista de Produtos
+    │   │   └── AddProduct.jsx  # Tela de Cadastro (Fallback)
+    │   ├── services/           # Configuração do Axios (api.js)
+    │   └── utils/              # Funções utilitárias (exportCsv.js)
 
 ```
-

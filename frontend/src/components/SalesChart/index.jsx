@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from 'antd';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const SalesChart = ({ data }) => {
+export const SalesChart = ({ data }) => {
   return (
     <Card title="Volume de Vendas por Mês" className="shadow-sm h-full" bordered={false}>
       <div style={{ height: 300 }}>

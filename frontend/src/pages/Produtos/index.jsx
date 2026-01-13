@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Table, Button, Select, Typography, Tag, Space, Input, Row, Col, 
-  Tooltip, Drawer, Form, InputNumber, message, Popconfirm 
+  Tooltip, Drawer, Form, InputNumber, message, Popconfirm, Upload 
 } from 'antd';
 import { 
   PlusOutlined, UploadOutlined, SearchOutlined, EditOutlined, 
-  DeleteOutlined, SaveOutlined, FileTextOutlined 
+  DeleteOutlined, SaveOutlined, FileTextOutlined, DownloadOutlined 
 } from '@ant-design/icons';
 
 import MainLayout from '../../components/Navbar';
 import { 
   getProducts, getCategories, getNextProductId, 
-  createProduct, updateProduct, deleteProduct 
-} from '../../service/api';
+  createProduct, updateProduct, deleteProduct, uploadProductCSV 
+} from '../../service/api'; // Verifique se é service ou services
 
-import { DownloadOutlined } from '@ant-design/icons'; 
 import { exportToCSV } from '../../utils/exportCsv'; 
 
-const { Title, Text } = Typography; // Adicionei Text
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -36,13 +35,7 @@ const Products = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [form] = Form.useForm();
-  const handleExport = () => {
-    if (allProducts.length > 0) {
-        exportToCSV(allProducts, `produtos_${new Date().toISOString().split('T')[0]}`);
-    } else {
-        message.warning("Sem dados para exportar.");
-    }
-  };
+
   // --- CARREGAMENTO INICIAL ---
   const fetchCategories = async () => {
     const data = await getCategories();
@@ -102,7 +95,6 @@ const Products = () => {
   };
 
   const handleEdit = (record) => {
-    // Impede a propagação para não abrir/fechar o expandir ao clicar no botão
     setEditingProduct(record);
     form.setFieldsValue({ ...record, category_id: record.category_id });
     setIsDrawerOpen(true);
@@ -115,6 +107,28 @@ const Products = () => {
       fetchProducts(selectedCategory);
     } else {
       message.error('Erro ao excluir.');
+    }
+  };
+
+  // Exportar CSV
+  const handleExport = () => {
+    if (allProducts.length > 0) {
+        exportToCSV(allProducts, `produtos_${new Date().toISOString().split('T')[0]}`);
+    } else {
+        message.warning("Sem dados para exportar.");
+    }
+  };
+
+  // Importar CSV
+  const handleUpload = async ({ file, onSuccess, onError }) => {
+    try {
+        const res = await uploadProductCSV(file);
+        message.success(res.message);
+        onSuccess("ok");
+        fetchProducts(); // Recarrega a lista
+    } catch (err) {
+        message.error("Erro ao importar CSV.");
+        onError(err);
     }
   };
 
@@ -139,7 +153,7 @@ const Products = () => {
     }
   };
 
-  // --- CONFIGURAÇÃO DA LINHA EXPANSÍVEL (DESCRIÇÃO) ---
+  // --- CONFIGURAÇÃO DA LINHA EXPANSÍVEL ---
   const expandedRowRender = (record) => {
     return (
       <div className="bg-gray-50 p-4 rounded-md border border-gray-100 mx-4">
@@ -149,48 +163,21 @@ const Products = () => {
                 <span>Descrição Detalhada:</span>
             </Space>
             <p className="text-gray-600 pl-6 m-0">
-                {record.description ? record.description : <span className="italic text-gray-400">Sem descrição cadastrada para este produto.</span>}
+                {record.description ? record.description : <span className="italic text-gray-400">Sem descrição cadastrada.</span>}
             </p>
         </Space>
       </div>
     );
   };
 
-  // --- COLUNAS ---
   const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 70,
-      render: (text) => <span className="text-gray-500">#{text}</span>
-    },
-    {
-      title: 'Produto',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text) => <span className="font-medium text-gray-800">{text}</span>
-    },
-    {
-      title: 'Marca',
-      dataIndex: 'brand',
-      key: 'brand',
-    },
-    {
-      title: 'Categoria',
-      dataIndex: 'category_name', 
-      key: 'category',
-      render: (text) => <Tag color="geekblue">{text || 'Geral'}</Tag>
-    },
-    {
-      title: 'Preço',
-      dataIndex: 'price',
-      key: 'price',
-      render: (value) => (
-        <span className="font-semibold text-teal-700">
-          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
-        </span>
-      )
+    { title: 'ID', dataIndex: 'id', width: 70, render: (t) => <span className="text-gray-500">#{t}</span> },
+    { title: 'Produto', dataIndex: 'name', render: (t) => <span className="font-medium text-gray-800">{t}</span> },
+    { title: 'Marca', dataIndex: 'brand' },
+    { title: 'Categoria', dataIndex: 'category_name', render: (t) => <Tag color="geekblue">{t || 'Geral'}</Tag> },
+    { 
+      title: 'Preço', dataIndex: 'price', 
+      render: (v) => <span className="font-semibold text-teal-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)}</span> 
     },
     {
       title: 'Ações',
@@ -198,19 +185,10 @@ const Products = () => {
       width: 120, 
       render: (_, record) => (
         <Space size="small" onClick={(e) => e.stopPropagation()}> 
-        {/* e.stopPropagation impede que clicar no botão abra a descrição */}
           <Tooltip title="Editar">
-            <Button 
-              type="text" icon={<EditOutlined />} 
-              className="text-blue-600 hover:bg-blue-50"
-              onClick={() => handleEdit(record)} 
-            />
+            <Button type="text" icon={<EditOutlined />} className="text-blue-600 hover:bg-blue-50" onClick={() => handleEdit(record)} />
           </Tooltip>
-          <Popconfirm
-            title="Excluir produto"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Sim" cancelText="Não"
-          >
+          <Popconfirm title="Excluir?" onConfirm={() => handleDelete(record.id)} okText="Sim" cancelText="Não">
             <Tooltip title="Excluir">
                 <Button type="text" danger icon={<DeleteOutlined />} className="hover:bg-red-50" />
             </Tooltip>
@@ -228,29 +206,29 @@ const Products = () => {
             <p className="text-gray-500">Gerencie o catálogo da sua loja.</p>
         </div>
         <Space>
-        {/* BOTÃO DE EXPORTAR (novo) */}
-        <Button icon={<DownloadOutlined />} onClick={handleExport}>
-            Baixar Lista
-        </Button>
+            <Button icon={<DownloadOutlined />} onClick={handleExport}>Baixar Lista</Button>
+            
+            <Upload customRequest={handleUpload} showUploadList={false} accept=".csv">
+                <Button icon={<UploadOutlined />}>Importar CSV</Button>
+            </Upload>
 
-        <Button icon={<UploadOutlined />}>Importar CSV</Button>
-        <Button type="primary" icon={<PlusOutlined />} className="bg-teal-600" onClick={handleAddNew}>
-            Novo Produto
-        </Button>
-    </Space>
+            <Button type="primary" icon={<PlusOutlined />} className="!bg-teal-600 hover:!bg-teal-700" onClick={handleAddNew}>
+                Novo Produto
+            </Button>
+        </Space>
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100">
         <Row gutter={16} align="middle">
             <Col xs={24} md={8}>
-                <span className="mr-2 text-gray-600">Filtrar por Categoria:</span>
+                <span className="mr-2 text-gray-600">Filtrar:</span>
                 <Select
                     style={{ width: 200 }}
-                    placeholder="Selecione uma categoria"
+                    placeholder="Categoria"
                     onChange={handleCategoryChange}
                     value={selectedCategory}
+                    allowClear
                 >
-                    <Option value={null}>Todos os produtos</Option>
                     {categories.map(cat => (
                         <Option key={cat.id} value={cat.id}>{cat.name}</Option>
                     ))}
@@ -276,32 +254,32 @@ const Products = () => {
         loading={loading}
         pagination={{ pageSize: 8 }} 
         className="shadow-sm bg-white rounded-lg"
-        
-        // --- AQUI ESTÁ A MÁGICA DA EXPANSÃO ---
         expandable={{
             expandedRowRender: expandedRowRender,
-            expandRowByClick: true, // Permite clicar na linha inteira
+            expandRowByClick: true, 
             rowExpandable: (record) => true,
         }}
       />
 
+      {/* --- DRAWER VERDE E MODERNO --- */}
       <Drawer
-        title={editingProduct ? "Editar Produto" : "Novo Produto"}
+        title={
+            <div className="text-teal-900 font-bold text-lg">
+                {editingProduct ? "Editar Produto" : "Novo Produto"}
+            </div>
+        }
         width={500}
         onClose={() => setIsDrawerOpen(false)}
         open={isDrawerOpen}
+        // Estilização do cabeçalho para ficar verde claro
+        headerStyle={{ backgroundColor: '#f0fdfa', borderBottom: '1px solid #ccfbf1' }}
         bodyStyle={{ paddingBottom: 80 }}
       >
-        <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            initialValues={{ price: 0 }}
-        >
+        <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ price: 0 }}>
             <Row gutter={16}>
                 <Col span={12}>
                     <Form.Item name="id" label="ID" rules={[{ required: true }]}>
-                        <InputNumber style={{ width: '100%' }} disabled={!!editingProduct} className="font-bold" />
+                        <InputNumber style={{ width: '100%' }} disabled={!!editingProduct} className="font-bold bg-gray-50" />
                     </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -341,10 +319,10 @@ const Products = () => {
                 <TextArea rows={4} placeholder="Detalhes do produto..." />
             </Form.Item>
 
-            <div className="absolute right-0 bottom-0 w-full border-t border-gray-100 p-4 bg-white text-right">
+            <div className="absolute right-0 bottom-0 w-full border-t border-gray-100 p-4 bg-white text-right shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                 <Space>
                     <Button onClick={() => setIsDrawerOpen(false)}>Cancelar</Button>
-                    <Button type="primary" htmlType="submit" className="bg-teal-600" icon={<SaveOutlined />}>
+                    <Button type="primary" htmlType="submit" className="!bg-teal-600 hover:!bg-teal-700" icon={<SaveOutlined />}>
                         {editingProduct ? "Atualizar" : "Salvar"}
                     </Button>
                 </Space>

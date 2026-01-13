@@ -215,7 +215,7 @@ const AddProduct = () => {
                     icon={<SaveOutlined />} 
                     size="large"
                     loading={loading}
-                    className="bg-teal-600 hover:bg-teal-500"
+                    className="!bg-teal-600 hover:!bg-teal-500"
                 >
                     Salvar Produto
                 </Button>

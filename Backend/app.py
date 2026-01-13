@@ -37,22 +37,38 @@ def get_products():
 
 @app.route('/dashboard', methods=['GET'])
 def get_dashboard_data():
+    # 1. Captura Filtros da URL
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
+    cat_id = request.args.get('category_id') # Novo
+    brand = request.args.get('brand')        # Novo
 
-    # --- 1. DADOS MENSAIS ---
+    # --- FUNÇÃO AUXILIAR DE FILTRO ---
+    # Aplica os filtros em qualquer query que tenha join com Product e Sale
+    def apply_filters(query):
+        if start_date and end_date:
+            query = query.filter(Sale.date >= start_date, Sale.date <= end_date)
+        if cat_id:
+            query = query.filter(Product.category_id == cat_id)
+        if brand:
+            query = query.filter(Product.brand == brand)
+        return query
+
+    # --- 1. DADOS MENSAIS (Gráficos) ---
+    # Precisamos do JOIN com Product agora para filtrar por Marca/Categoria
     query_sales = db.session.query(
         func.strftime('%Y-%m', Sale.date).label('month'),
         func.sum(Sale.total_price).label('revenue'),
         func.sum(Sale.quantity).label('quantity')
-    )
-    if start_date and end_date:
-        query_sales = query_sales.filter(Sale.date >= start_date, Sale.date <= end_date)
+    ).join(Product, Sale.product_id == Product.id) # Join necessário para o filtro
+
+    query_sales = apply_filters(query_sales) # Aplica filtros
     sales_by_month = query_sales.group_by('month').order_by('month').all()
 
     chart_data = []
     total_revenue = 0
     total_sales = 0
+
     for s in sales_by_month:
         rev = s.revenue or 0
         qtd = s.quantity or 0
@@ -66,8 +82,9 @@ def get_dashboard_data():
         func.sum(Sale.quantity).label('qty'),
         func.sum(Sale.total_price).label('total')
     ).join(Sale, Product.id == Sale.product_id)
-    if start_date and end_date:
-        query_products = query_products.filter(Sale.date >= start_date, Sale.date <= end_date)
+    
+    query_products = apply_filters(query_products) # Aplica filtros
+    
     top_products_data = query_products.group_by(Product.id).order_by(func.sum(Sale.total_price).desc()).limit(5).all()
 
     top_products = []
@@ -78,20 +95,18 @@ def get_dashboard_data():
             "name": p.name, "quantity": p.qty, "total": round(p_total, 2), "percentage": round(percentage, 1)
         })
 
-    # --- 3. SHARE POR BRAND (NOVO!) ---
+    # --- 3. SHARE POR BRAND ---
     query_brands = db.session.query(
         Product.brand,
         func.sum(Sale.total_price).label('total')
     ).join(Sale, Product.id == Sale.product_id)
     
-    if start_date and end_date:
-        query_brands = query_brands.filter(Sale.date >= start_date, Sale.date <= end_date)
-        
+    query_brands = apply_filters(query_brands) # Aplica filtros
+    
     brands_data = query_brands.group_by(Product.brand).all()
     
     sales_by_brand = []
     for b in brands_data:
-        # Só adiciona se tiver valor relevante
         if b.total and b.total > 0:
             sales_by_brand.append({
                 "name": b.brand,
@@ -106,10 +121,8 @@ def get_dashboard_data():
             "total_profit": round(total_revenue * 0.30, 2)
         },
         "top_products": top_products,
-        "sales_by_brand": sales_by_brand # <--- Novo campo no JSON
+        "sales_by_brand": sales_by_brand
     })
-
-
     
     # --- ROTA PARA PEGAR O PRÓXIMO ID ---
 @app.route('/products/next-id', methods=['GET'])

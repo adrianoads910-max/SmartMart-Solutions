@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Statistic } from 'antd';
 
-const StatCard = ({ title, value, prefix, color, icon }) => {
+export const StatCard = ({ title, value, prefix, color, icon }) => {
   return (
     <Card bordered={false} className="shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">

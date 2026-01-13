@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from 'antd';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const RevenueChart = ({ data }) => {
+export const RevenueChart = ({ data }) => {
   return (
     <Card title="Evolução do Faturamento" className="shadow-sm h-full" bordered={false}>
       <div style={{ height: 300 }}>
