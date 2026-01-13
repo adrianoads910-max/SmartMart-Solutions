@@ -109,89 +109,7 @@ def get_dashboard_data():
         "sales_by_brand": sales_by_brand # <--- Novo campo no JSON
     })
 
-# --- NOVA ROTA DE UPLOAD ---
-@app.route('/products/upload', methods=['POST'])
-def upload_products_csv():
-    """Recebe um CSV e insere/atualiza produtos."""
-    
-    # 1. Verifica se o arquivo foi enviado
-    if 'file' not in request.files:
-        return jsonify({'error': 'Nenhum arquivo enviado'}), 400
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        return jsonify({'error': 'Nome do arquivo vazio'}), 400
-    
-    if not file.filename.endswith('.csv'):
-        return jsonify({'error': 'Formato inválido. Envie um arquivo .csv'}), 400
 
-    try:
-        # 2. Lê o CSV da memória (não precisa salvar no disco)
-        # O stream do arquivo vem em bytes, o pandas lê direto
-        df = pd.read_csv(file)
-        
-        # 3. Validação básica das colunas
-        required_columns = ['name', 'price', 'category_id']
-        if not all(col in df.columns for col in required_columns):
-            return jsonify({'error': f'O CSV deve conter as colunas: {required_columns}'}), 400
-
-        processed_count = 0
-        errors = []
-
-        # 4. Itera sobre as linhas e salva no banco
-        for index, row in df.iterrows():
-            try:
-                # Verifica se a categoria existe (Evita erro de Foreign Key)
-                category = Category.query.get(row['category_id'])
-                if not category:
-                    errors.append(f"Linha {index+1}: Categoria ID {row['category_id']} não existe.")
-                    continue
-
-                # Verifica se o produto já existe pelo ID (se fornecido) ou cria novo
-                product_id = row.get('id')
-                product = None
-                
-                if product_id and not pd.isna(product_id):
-                    product = Product.query.get(product_id)
-                
-                if product:
-                    # ATUALIZAÇÃO (Update)
-                    product.name = row['name']
-                    product.description = row.get('description', product.description)
-                    product.price = row['price']
-                    product.brand = row.get('brand', product.brand)
-                    product.category_id = row['category_id']
-                else:
-                    # CRIAÇÃO (Insert)
-                    # Se vier ID no CSV mas não existir no banco, usamos ele, senão o banco cria auto
-                    new_id = int(product_id) if product_id and not pd.isna(product_id) else None
-                    
-                    product = Product(
-                        id=new_id, 
-                        name=row['name'],
-                        description=row.get('description', ''),
-                        price=row['price'],
-                        brand=row.get('brand', ''),
-                        category_id=row['category_id']
-                    )
-                    db.session.add(product)
-                
-                processed_count += 1
-                
-            except Exception as e:
-                errors.append(f"Erro na linha {index+1}: {str(e)}")
-
-        db.session.commit()
-
-        return jsonify({
-            'message': 'Processamento concluído',
-            'success_count': processed_count,
-            'errors': errors
-        }), 200 if not errors else 207 # 207 Multi-Status (sucesso parcial)
-
-    except Exception as e:
-        return jsonify({'error': f'Erro ao processar arquivo: {str(e)}'}), 500
     
     # --- ROTA PARA PEGAR O PRÓXIMO ID ---
 @app.route('/products/next-id', methods=['GET'])
@@ -352,6 +270,61 @@ def create_sale():
         return jsonify({'message': 'Venda registrada com sucesso!'}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+# --- CRIAR NOVA CATEGORIA (Rápida) ---
+@app.route('/categories', methods=['POST'])
+def create_category():
+    data = request.json
+    name = data.get('name')
+    if not name:
+        return jsonify({'error': 'Nome é obrigatório'}), 400
+        
+    try:
+        # Verifica se já existe
+        exists = Category.query.filter_by(name=name).first()
+        if exists:
+            return jsonify({'error': 'Categoria já existe', 'id': exists.id}), 400
+
+        new_cat = Category(name=name)
+        db.session.add(new_cat)
+        db.session.commit()
+        return jsonify({'message': 'Categoria criada!', 'id': new_cat.id, 'name': new_cat.name}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- UPLOAD CSV DE PRODUTOS ---
+@app.route('/products/upload', methods=['POST'])
+def upload_products_csv():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nenhum arquivo enviado'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
+
+    try:
+        # Lê o CSV usando Pandas
+        df = pd.read_csv(file)
+        
+        count = 0
+        for index, row in df.iterrows():
+            # Verifica se o ID já existe para não quebrar (ou poderia atualizar)
+            if not Product.query.get(row['id']):
+                prod = Product(
+                    id=row['id'],
+                    name=row['name'],
+                    brand=row['brand'],
+                    price=row['price'],
+                    category_id=row['category_id'],
+                    description=row.get('description', '')
+                )
+                db.session.add(prod)
+                count += 1
+        
+        db.session.commit()
+        return jsonify({'message': f'{count} produtos importados com sucesso!'})
+    except Exception as e:
+        return jsonify({'error': f'Erro ao processar CSV: {str(e)}'}), 500    
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

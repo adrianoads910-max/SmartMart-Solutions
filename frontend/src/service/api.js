@@ -139,5 +139,33 @@ export const createSale = async (saleData) => {
     }
 };
 
+export const createCategory = async (name) => {
+    try {
+        const response = await api.post('/categories', { name });
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao criar categoria:", error);
+        throw error;
+    }
+};
+
+// Envia o arquivo CSV
+export const uploadProductCSV = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await api.post('/products/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Erro no upload:", error);
+        throw error;
+    }
+};
+
 
 export default api;

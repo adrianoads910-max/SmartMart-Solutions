@@ -14,6 +14,9 @@ import {
   createProduct, updateProduct, deleteProduct 
 } from '../../service/api';
 
+import { DownloadOutlined } from '@ant-design/icons'; 
+import { exportToCSV } from '../../utils/exportCsv'; 
+
 const { Title, Text } = Typography; // Adicionei Text
 const { Option } = Select;
 const { TextArea } = Input;
@@ -33,7 +36,13 @@ const Products = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [form] = Form.useForm();
-
+  const handleExport = () => {
+    if (allProducts.length > 0) {
+        exportToCSV(allProducts, `produtos_${new Date().toISOString().split('T')[0]}`);
+    } else {
+        message.warning("Sem dados para exportar.");
+    }
+  };
   // --- CARREGAMENTO INICIAL ---
   const fetchCategories = async () => {
     const data = await getCategories();
@@ -218,6 +227,17 @@ const Products = () => {
             <Title level={2} className="!mb-0">Produtos</Title>
             <p className="text-gray-500">Gerencie o catálogo da sua loja.</p>
         </div>
+        <Space>
+        {/* BOTÃO DE EXPORTAR (novo) */}
+        <Button icon={<DownloadOutlined />} onClick={handleExport}>
+            Baixar Lista
+        </Button>
+
+        <Button icon={<UploadOutlined />}>Importar CSV</Button>
+        <Button type="primary" icon={<PlusOutlined />} className="bg-teal-600" onClick={handleAddNew}>
+            Novo Produto
+        </Button>
+    </Space>
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100">
