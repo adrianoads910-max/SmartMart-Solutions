@@ -1,172 +1,25 @@
-import axios from 'axios';
+// Importa TUDO de ambos os arquivos
+import * as RealApi from './api.real';
+import * as MockApi from './api.mock';
 
-const api = axios.create({
-  baseURL: 'http://localhost:5000',
-});
+// Define qual usar. 
+// Pode mudar manualmente aqui para 'true' ou 'false'
+const USE_MOCK_MODE = false; // Mude para true para usar Mock
 
-// --- DASHBOARD ---
-export const getDashboardData = async (startDate, endDate, categoryId, brand) => {
-  try {
-    // Usamos URLSearchParams para facilitar a montagem da query string
-    const params = new URLSearchParams();
-    
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
-    if (categoryId) params.append('category_id', categoryId);
-    if (brand) params.append('brand', brand);
+// Exporta as funções do módulo escolhido
+export const getCategories = USE_MOCK_MODE ? MockApi.getCategories : RealApi.getCategories;
+export const getProducts = USE_MOCK_MODE ? MockApi.getProducts : RealApi.getProducts;
+export const getNextProductId = USE_MOCK_MODE ? MockApi.getNextProductId : RealApi.getNextProductId;
+export const createProduct = USE_MOCK_MODE ? MockApi.createProduct : RealApi.createProduct;
+export const updateProduct = USE_MOCK_MODE ? MockApi.updateProduct : RealApi.updateProduct;
+export const deleteProduct = USE_MOCK_MODE ? MockApi.deleteProduct : RealApi.deleteProduct;
+export const createCategory = USE_MOCK_MODE ? MockApi.createCategory : RealApi.createCategory;
+export const uploadProductCSV = USE_MOCK_MODE ? MockApi.uploadProductCSV : RealApi.uploadProductCSV;
 
-    const response = await api.get(`/dashboard?${params.toString()}`);
-    return response.data;
-  } catch (error) {
-    console.error("Erro dashboard:", error);
-    return null;
-  }
-};
-
-// --- PRODUTOS ---
-export const getProducts = async (categoryId = null) => {
-    try {
-        
-        const url = categoryId ? `/products?category_id=${categoryId}` : '/products';
-        const response = await api.get(url);
-        return response.data;
-    } catch (error) {
-        console.error("Erro ao buscar produtos:", error);
-        return [];
-    }
-};
-
-export const getCategories = async () => {
-    try {
-        const response = await api.get('/categories');
-        return response.data;
-    } catch (error) {
-        console.error("Erro ao buscar categorias:", error);
-        return [];
-    }
-};
-
-export const getNextProductId = async () => {
-    try {
-        const response = await api.get('/products/next-id');
-        return response.data.next_id;
-    } catch (error) {
-        console.error("Erro ao buscar próximo ID:", error);
-        return '';
-    }
-};
-
-export const createProduct = async (productData) => {
-    try {
-        const response = await api.post('/products', productData);
-        return response.data;
-    } catch (error) {
-        console.error("Erro ao criar produto:", error);
-        throw error; // Lança o erro para o form tratar
-    }
-};
-
-export const updateProduct = async (id, productData) => {
-    try {
-        await api.put(`/products/${id}`, productData);
-        return true;
-    } catch (error) {
-        console.error("Erro ao atualizar:", error);
-        return false;
-    }
-};
-
-export const deleteProduct = async (id) => {
-    try {
-        await api.delete(`/products/${id}`);
-        return true;
-    } catch (error) {
-        console.error("Erro ao deletar:", error);
-        return false;
-    }
-};
-
-// ... outros exports
-
-export const getSalesHistory = async () => {
-    try {
-        const response = await api.get('/sales');
-        return response.data;
-    } catch (error) {
-        console.error("Erro ao buscar histórico de vendas:", error);
-        return [];
-    }
-};
-
-export const updateSale = async (id, saleData) => {
-    try {
-        await api.put(`/sales/${id}`, saleData);
-        return true;
-    } catch (error) {
-        console.error("Erro ao atualizar venda:", error);
-        return false;
-    }
-};
-
-export const deleteSale = async (id) => {
-    try {
-        await api.delete(`/sales/${id}`);
-        return true;
-    } catch (error) {
-        console.error("Erro ao deletar venda:", error);
-        return false;
-    }
-};
-
-// ...
-
-export const getNextSaleId = async () => {
-    try {
-        const response = await api.get('/sales/next-id');
-        return response.data.next_id;
-    } catch (error) {
-        console.error("Erro ID venda:", error);
-        return '';
-    }
-};
-
-export const createSale = async (saleData) => {
-    try {
-        const response = await api.post('/sales', saleData);
-        return true;
-    } catch (error) {
-        console.error("Erro criar venda:", error);
-        return false;
-    }
-};
-
-export const createCategory = async (name) => {
-    try {
-        const response = await api.post('/categories', { name });
-        return response.data;
-    } catch (error) {
-        console.error("Erro ao criar categoria:", error);
-        throw error;
-    }
-};
-
-// Envia o arquivo CSV
-export const uploadProductCSV = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-        const response = await api.post('/products/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Erro no upload:", error);
-        throw error;
-    }
-};
-
-
-export default api;
+// Vendas & Dashboard
+export const getSalesHistory = USE_MOCK_MODE ? MockApi.getSalesHistory : RealApi.getSalesHistory;
+export const getNextSaleId = USE_MOCK_MODE ? MockApi.getNextSaleId : RealApi.getNextSaleId;
+export const createSale = USE_MOCK_MODE ? MockApi.createSale : RealApi.createSale;
+export const updateSale = USE_MOCK_MODE ? MockApi.updateSale : RealApi.updateSale;
+export const deleteSale = USE_MOCK_MODE ? MockApi.deleteSale : RealApi.deleteSale;
+export const getDashboardData = USE_MOCK_MODE ? MockApi.getDashboardData : RealApi.getDashboardData;
