@@ -1,0 +1,7 @@
+id,name,brand,price,category_id,description
+501,Smartphone Galaxy S23,Samsung,3500.00,1,Celular com câmera 8K e 256GB
+502,Notebook Gamer G15,Dell,5200.50,1,Intel Core i7 16GB RAM Placa RTX 3050
+503,Tênis Ultraboost,Adidas,799.90,2,Tênis de corrida de alta performance
+504,Camisa Polo Básica,Lacoste,250.00,2,Camisa 100% algodão piquet
+505,Air Fryer Digital,Philips,650.00,3,Fritadeira sem óleo 4L painel touch
+506,Cafeteira Expresso,Três Corações,349.90,3,Máquina automática multibebidas
