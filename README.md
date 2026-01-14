@@ -1,87 +1,105 @@
+
 # 🛒 SmartMart Solutions - Dashboard & Gestão de Produtos
 
 > Desafio Técnico Fullstack | Python (Flask) + React (Vite)
 
 Este projeto é um protótipo funcional desenvolvido para a **SmartMart Solutions**, focado na visualização de dados de vendas (Dashboard), no gerenciamento de catálogo de produtos (CRUD) e no controle de transações (Histórico de Vendas).
 
-O sistema foi construído com foco em **UX/UI moderna**, utilizando **Ant Design** para componentes visuais e **Recharts** para visualização de dados, com um backend leve em **Flask**.
+O sistema foi construído com foco em **UX/UI moderna**, utilizando **Ant Design** para componentes visuais e **Recharts** para visualização de dados.
+
+---
+
+## 🔄 Branchs & Modos de Execução
+
+O projeto foi estruturado em duas branches principais para atender diferentes cenários de deploy e teste:
+
+### 1. Branch `main` (Modo Fullstack Real)
+- **Arquitetura:** Frontend (React) conectado a uma API Real (Python/Flask).
+- **Banco de Dados:** SQLite (Local).
+- **Requisito:** Necessário rodar o backend e o frontend simultaneamente.
+
+### 2. Branch `demo-static` (Modo Demonstração / Firebase)
+- **Arquitetura:** Frontend Autônomo ("Serverless Mock").
+- **Dados:** Utiliza `localStorage` do navegador e CSVs embutidos para simular um banco de dados e latência de rede.
+- **Requisito:** Roda apenas com o Frontend (não precisa de Python instalado).
+
+
+**Como alternar entre as versões:**
+```bash
+# Para desenvolver com Backend Python
+git checkout main
+
+# Para gerar build de demonstração (sem backend)
+git checkout demo-static
+
+```
 
 ---
 
 ## 🚀 Funcionalidades Principais
 
 ### 📊 Dashboard Interativo
-- **KPIs em Tempo Real:** Visualização rápida de Vendas Totais, Receita Bruta e Lucro Estimado.
-- **Filtro de Período:** Seletor de data (`DateRangePicker`) que atualiza todas as métricas e gráficos dinamicamente.
-- **Gráficos Visuais:**
-  - Evolução de Vendas (Barras) e Faturamento (Área).
-  - **Market Share por Marca:** Gráfico de Rosca (Donut) mostrando a participação de cada marca no faturamento.
-- **Ranking de Produtos:** Tabela de "Top 5 Produtos" com medalhas (🥇, 🥈, 🥉) para os líderes e barra de progresso visual.
 
-### 📜 Histórico de Vendas (Novo)
-- **Listagem Completa:** Tabela detalhada de todas as transações realizadas.
-- **Busca Inteligente:** Filtro local por nome do produto, categoria ou data.
-- **Recibo Digital (Expandable):** Ao clicar na venda, abre-se um detalhe estilo "cupom" mostrando o cálculo (Preço Unitário × Quantidade = Total).
-- **PDV (Ponto de Venda):**
-  - **Nova Venda:** Formulário inteligente que preenche o preço unitário ao selecionar o produto e calcula o total automaticamente.
-  - **Edição:** Permite ajustar quantidade ou data, recalculando os valores em tempo real.
-- **Exportação:** Botão para baixar o relatório de vendas atual em **CSV** instantaneamente.
+* **KPIs em Tempo Real:** Visualização rápida de Vendas Totais, Receita Bruta e Lucro Estimado.
+* **Filtros Dinâmicos:** Seletor de data, categorias e marcas que atualizam os gráficos instantaneamente.
+* **Gráficos Visuais:**
+* Evolução de Vendas (Barras) e Faturamento (Área).
+* **Market Share:** Gráfico de Rosca (Donut) mostrando a participação de cada marca.
+
+
+* **Ranking:** Tabela de "Top 5 Produtos" com medalhas (🥇, 🥈, 🥉).
+
+### 📜 Histórico de Vendas (PDV)
+
+* **Listagem & Controle:** Tabela detalhada de todas as transações realizadas.
+* **Recibo Digital:** Detalhe expansível estilo "cupom" (Preço Unitário × Qtd = Total).
+* **Nova Venda (Cálculo Automático):** Ao selecionar um produto, o sistema preenche o preço e calcula o total com base na quantidade.
+* **Edição de Vendas:** Permite corrigir lançamentos (quantidade, data ou valor) diretamente na tabela.
+* **Exportação de Dados:** Botão para **baixar o histórico de vendas** completo em arquivo **CSV** para análises externas.
 
 ### 📦 Gestão de Produtos
-- **Listagem Avançada:** Tabela com paginação automática e exportação para CSV.
-- **Filtros e Busca:** Filtragem por Categoria (Select) e Busca Textual (Nome, Marca ou ID) em tempo real.
-- **CRUD Completo via Drawer:**
-  - **Criação:** Formulário lateral que sugere o próximo ID sequencial.
-  - **Categorias:** Criação rápida de novas categorias sem sair da tela de cadastro.
-  - **Edição/Exclusão:** Atualização de dados e remoção com trava de segurança (`Popconfirm`).
-- **Importação em Lote:** Upload de arquivo CSV (rota `/products/upload`) processado via Pandas no backend.
+
+* **CRUD Completo:** Criação, Leitura, Atualização e Exclusão de produtos via formulários laterais (Drawer).
+* **Importação e Exportação (CSV):**
+* **Importar:** Upload de arquivo CSV para cadastro em massa de produtos.
+* **Baixar Lista:** Download do catálogo completo de produtos em CSV.
+
+
+* **Categorização Rápida:** Criação de novas categorias sem sair da tela de cadastro.
+* **Edição Fácil:** Atualize preços, marcas e descrições com poucos cliques.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-### Backend (API)
-- **Linguagem:** Python 3+
-- **Framework:** Flask
-- **Banco de Dados:** SQLite (com SQLAlchemy ORM)
-- **Manipulação de Dados:** Pandas (para leitura de CSV e processamento)
-- **CORS:** Flask-CORS para integração.
+### Backend (Branch `main`)
 
-### Frontend (Interface)
-- **Framework:** React (Vite)
-- **Estilização:** Tailwind CSS + Ant Design (AntD)
-- **Gráficos:** Recharts
-- **Manipulação de Datas:** Day.js
-- **Http Client:** Axios
+* **Linguagem:** Python 3+
+* **Framework:** Flask
+* **ORM:** SQLAlchemy (SQLite/Postgres)
+* **Processamento:** Pandas (para leitura eficiente de CSV)
+
+### Frontend
+
+* **Framework:** React (Vite)
+* **Estilização:** Tailwind CSS + Ant Design 5.0 (ConfigProvider Theme: Teal)
+* **Gráficos:** Recharts
+* **Http Client:** Axios (na main) / Mock Service (na demo-static)
 
 ---
 
-## ⚙️ Como Rodar o Projeto
-
-Siga os passos abaixo para executar a aplicação localmente.
+## ⚙️ Como Rodar o Projeto (Localmente)
 
 ### Pré-requisitos
-- Python 3.8+
-- Node.js 16+
 
-### 1. Configurando o Backend
+* Node.js 16+
+* Python 3.8+ (Apenas para branch `main`)
 
-Navegue até a pasta do backend:
+### 1. Configurando o Backend (Branch `main` apenas)
+
 ```bash
 cd backend
-
-```
-
-Instale as dependências:
-
-```bash
 pip install flask flask-sqlalchemy flask-cors pandas
-
-```
-
-Execute o servidor (o banco será criado e populado automaticamente na primeira execução):
-
-```bash
 python app.py
 
 ```
@@ -90,56 +108,38 @@ python app.py
 
 ### 2. Configurando o Frontend
 
-Abra um novo terminal e navegue até a pasta do frontend:
-
 ```bash
 cd frontend
-
-```
-
-Instale as dependências:
-
-```bash
 npm install
-# Ou se preferir pnpm:
-# npm i -g pnpm
-# pnpm install
-
-```
-
-Rode o projeto:
-
-```bash
 npm run dev
-# Ou: pnpm run dev
 
 ```
 
-*Acesse a aplicação em: `http://localhost:5173*`
+*Acesse em: `http://localhost:5173*`
 
 ---
 
-## 📂 Estrutura do Projeto
+## ☁️ Deploy (Firebase Hosting)
 
-```text
-/
-├── backend/
-│   ├── app.py           # Rotas, Models e Lógica de Negócio
-│   ├── database.py      # Configuração do SQLite
-│   ├── seeds.py         # Script de carga inicial
-│   └── *.csv            # Arquivos de dados iniciais
-│
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── dashboard/      # Gráficos, Cards e Drawers (AddSaleDrawer)
-    │   │   └── layout/         # MainLayout (Sidebar + Header)
-    │   ├── pages/
-    │   │   ├── Dashboard.jsx   # Visão Geral (KPIs)
-    │   │   ├── SalesHistory.jsx# Histórico de Vendas (Tabela + PDV)
-    │   │   ├── Products.jsx    # Lista de Produtos
-    │   │   └── AddProduct.jsx  # Tela de Cadastro (Fallback)
-    │   ├── services/           # Configuração do Axios (api.js)
-    │   └── utils/              # Funções utilitárias (exportCsv.js)
+Esta aplicação está configurada para deploy estático utilizando a branch `demo-static`.
+
+1. Mude para a branch de demonstração:
+```bash
+git checkout demo-static
+
+```
+
+
+2. Gere o build de produção:
+```bash
+cd frontend
+npm run build
+
+```
+
+
+3. Faça o deploy (necessário Firebase CLI):
+```bash
+firebase deploy
 
 ```
