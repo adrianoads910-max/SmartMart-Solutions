@@ -125,5 +125,3 @@ Esta aplicação está configurada para deploy estático utilizando a branch `de
 
 
 *Acesse em: `https://smartmart-demo-mock.web.app/`
-
-```
