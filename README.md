@@ -123,23 +123,7 @@ npm run dev
 
 Esta aplicação está configurada para deploy estático utilizando a branch `demo-static`.
 
-1. Mude para a branch de demonstração:
-```bash
-git checkout demo-static
 
-```
-
-
-2. Gere o build de produção:
-```bash
-cd frontend
-npm run build
-
-```
-
-
-3. Faça o deploy (necessário Firebase CLI):
-```bash
-firebase deploy
+*Acesse em: `https://smartmart-demo-mock.web.app/`
 
 ```
