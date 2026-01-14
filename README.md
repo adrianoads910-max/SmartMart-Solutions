@@ -69,6 +69,22 @@ git checkout demo-static
 * **Edição Fácil:** Atualize preços, marcas e descrições com poucos cliques.
 
 ---
+## 📱 Preview 
+
+### 🎥 Funcionamento (Demo)
+![Demo do App](./frontend/src/assets/funcionamento.gif)
+
+---
+### 📸 Capturas de Tela
+
+| Dashboard (Frontend) | Dashboard Raking (Frontend) |
+| :---: | :---: |
+| ![Dashboard](./frontend/src/assets/dashboard.png) | ![Dashboard Raking](./frontend/src/assets/dashboard-raking.png) |
+
+| Historico de Vendas (Frontend) | Novo Produto (Frontend) |
+| :---: | :---: |
+| ![Historico](./frontend/src/assets/historico.png) | ![Produto](./frontend/src/assets/novo-produto.png) |
+
 
 ## 🛠️ Tecnologias Utilizadas
 
